@@ -1,19 +1,32 @@
 ﻿Imports System.Net
 Imports System.IO
+Imports System.Drawing.Graphics
+
+
+
 Public Class frmStartup
     Dim histPrices As String
     Dim formatHistPrices As String(,)
+    Dim mainGraph As System.Drawing.Graphics
+    Dim ticker As String
+    Dim startdate As Date
+    Dim enddate As Date
+
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        picMain.ClientSize = New Size(Me.Width, Me.Height)
+        frmControl.Show()
 
-    End Sub
-
-    Private Sub btnQuery_Click(sender As Object, e As EventArgs) Handles btnQuery.Click
         histPrices = queryYahoo("GE", "01001991", "01001992", "d")
-        txtTestOutput.Text = histPrices
-        Dim temp As String(,) = formatCSV(histPrices)
-
+        Dim test As DataTable
+        test = formatCSV(histPrices)
+        'For Each i As DataRow In test.Rows
+        'For j As Integer = 0 To 6
+        'MsgBox(i(j))
+        'Next
+        'Next
     End Sub
+
     ''' <summary>
     ''' Query for historical data from yahoo, returns csv text, dates not inclusive
     ''' </summary>
@@ -73,37 +86,72 @@ Public Class frmStartup
         queryURL = queryURL + queryParams
         Return queryURL
     End Function
-    Public Function formatCSV(inputCSV As String) As String(,)
+    Public Function formatCSV(inputCSV As String) As System.Data.DataTable
         'perhaps change to output as datatable/dataset instead of array
         Dim parser As New FileIO.TextFieldParser(New StringReader(inputCSV))
         Dim temp As String()
-        Dim columns = 7
-        Dim rows As Integer = 0
+        Dim columns As System.Data.DataColumn
+
+        Dim output = New System.Data.DataTable("Output")
+
+        columns = New DataColumn("Date", System.Type.GetType("System.String"))
+        columns.Caption = "Date"
+        output.Columns.Add(columns)
+
+        columns = New DataColumn("Open", System.Type.GetType("System.Double"))
+        columns.Caption = "Open"
+        output.Columns.Add(columns)
+
+        columns = New DataColumn("High", System.Type.GetType("System.Double"))
+        columns.Caption = "High"
+        output.Columns.Add(columns)
+
+        columns = New DataColumn("Low", System.Type.GetType("System.Double"))
+        columns.Caption = "Low"
+        output.Columns.Add(columns)
+
+        columns = New DataColumn("Close", System.Type.GetType("System.Double"))
+        columns.Caption = "Close"
+        output.Columns.Add(columns)
+
+        columns = New DataColumn("Volume", System.Type.GetType("System.Double"))
+        columns.Caption = "Vol"
+        output.Columns.Add(columns)
+
+        columns = New DataColumn("Adjusted Closing Price", System.Type.GetType("System.Double"))
+        columns.Caption = "Adj Close"
+        output.Columns.Add(columns)
 
         parser.TextFieldType = FileIO.FieldType.Delimited
         parser.SetDelimiters(",")
-        While parser.EndOfData = False
-            rows = rows + 1
-            temp = parser.ReadFields
-        End While
-        parser.Close()
 
-        parser = New FileIO.TextFieldParser(New StringReader(inputCSV))
-        parser.TextFieldType = FileIO.FieldType.Delimited
-        parser.SetDelimiters(",")
-
-        Dim output(6, rows - 1) As String
         Dim k As Integer = 0
-        For i As Integer = 0 To rows - 1
+        parser.ReadFields()
+        While parser.EndOfData = False
             temp = parser.ReadFields
+            output.Rows.Add(temp)
+        End While
 
-            For Each j As String In temp
-                output(k, i) = j
-                k = k + 1
-            Next
-            k = 0
-        Next
 
         Return output
     End Function
+ 
+
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+        Dim testPen As New System.Drawing.Pen(Color.Red, 10)
+        mainGraph = picMain.CreateGraphics
+        mainGraph.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+
+
+
+    End Sub
+
+    Private Sub frmStartup_Resize(sender As Object, e As EventArgs) Handles Me.Resize
+        picMain.ClientSize = New Size(Me.Width, Me.Height)
+    End Sub
+    Public Sub updateSelection()
+        ticker = frmControl.getTicker
+        enddate = frmControl.getEndDate
+        startdate = frmControl.getStartDate
+    End Sub
 End Class
