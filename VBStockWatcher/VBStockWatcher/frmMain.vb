@@ -1,7 +1,7 @@
 ﻿Imports System.Net
 Imports System.IO
 Imports System.Drawing.Graphics
-
+Imports System.Math
 
 
 Public Class frmStartup
@@ -11,22 +11,30 @@ Public Class frmStartup
     Dim ticker As String
     Dim startdate As Date
     Dim enddate As Date
+    Dim xScale As Double
+    Dim yScale As Double
 
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         picMain.ClientSize = New Size(Me.Width, Me.Height)
         frmControl.Show()
+        frmControl.initForm()
 
-        histPrices = queryYahoo("GE", "01001991", "01001992", "d")
-        Dim test As DataTable
-        test = formatCSV(histPrices)
+        'Dim test As DataTable
+        'test = formatCSV(histPrices)
         'For Each i As DataRow In test.Rows
         'For j As Integer = 0 To 6
         'MsgBox(i(j))
         'Next
         'Next
     End Sub
-
+    Public Sub getQuery(ticker As String, startDate As Date, endDate As Date)
+        Dim formatStartDate As String
+        Dim formatEndDate As String
+        formatStartDate = startDate.Day.ToString + (startDate.Month - 1).ToString + startDate.Year.ToString
+        formatEndDate = endDate.Day.ToString + (endDate.Month - 1).ToString + startDate.Year.ToString
+        histPrices = queryYahoo(ticker, formatStartDate, formatEndDate, "d")
+    End Sub
     ''' <summary>
     ''' Query for historical data from yahoo, returns csv text, dates not inclusive
     ''' </summary>
@@ -142,8 +150,6 @@ Public Class frmStartup
         mainGraph = picMain.CreateGraphics
         mainGraph.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
 
-
-
     End Sub
 
     Private Sub frmStartup_Resize(sender As Object, e As EventArgs) Handles Me.Resize
@@ -154,4 +160,5 @@ Public Class frmStartup
         enddate = frmControl.getEndDate
         startdate = frmControl.getStartDate
     End Sub
+
 End Class

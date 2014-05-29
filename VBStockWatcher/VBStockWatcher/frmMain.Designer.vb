@@ -29,6 +29,7 @@ Partial Class frmStartup
         '
         'btnUpdate
         '
+        Me.btnUpdate.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.btnUpdate.Cursor = System.Windows.Forms.Cursors.Arrow
         Me.btnUpdate.Location = New System.Drawing.Point(1029, 526)
         Me.btnUpdate.Name = "btnUpdate"
