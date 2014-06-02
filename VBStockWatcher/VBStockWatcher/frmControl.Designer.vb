@@ -63,6 +63,7 @@ Partial Class frmControl
         Me.calStart.Location = New System.Drawing.Point(16, 75)
         Me.calStart.MaxSelectionCount = 1
         Me.calStart.Name = "calStart"
+        Me.calStart.ShowToday = False
         Me.calStart.TabIndex = 3
         '
         'lblEndDate
@@ -80,6 +81,7 @@ Partial Class frmControl
         Me.calEnd.Location = New System.Drawing.Point(16, 266)
         Me.calEnd.MaxSelectionCount = 1
         Me.calEnd.Name = "calEnd"
+        Me.calEnd.ShowToday = False
         Me.calEnd.TabIndex = 5
         '
         'btnUpdate
