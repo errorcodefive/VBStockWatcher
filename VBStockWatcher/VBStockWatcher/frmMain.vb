@@ -19,7 +19,7 @@ Public Class frmStartup
         picMain.ClientSize = New Size(Me.Width, Me.Height)
         frmControl.Show()
         frmControl.initForm()
-<<<<<<< HEAD
+
         Dim lblX(10) As Label
         lblX(0) = lblX0
         lblX(1) = lblX1
@@ -42,8 +42,6 @@ Public Class frmStartup
         lblY(7) = lblY7
         lblY(8) = lblY8
         lblY(9) = lblY9
-=======
->>>>>>> 85be2ca63cc0c840a23ad74aecbd5f8f573a534e
 
         'Dim test As DataTable
         'test = formatCSV(histPrices)
@@ -53,18 +51,17 @@ Public Class frmStartup
         'Next
         'Next
     End Sub
+
     Public Sub getQuery(ticker As String, startDate As Date, endDate As Date)
         Dim formatStartDate As String
         Dim formatEndDate As String
-<<<<<<< HEAD
+
         formatStartDate = startDate.Day.ToString.PadLeft(2, "0") + (startDate.Month - 1).ToString.PadLeft(2, "0") + startDate.Year.ToString
         formatEndDate = endDate.Day.ToString.PadLeft(2, "0") + (endDate.Month - 1).ToString.PadLeft(2, "0") + startDate.Year.ToString
-=======
-        formatStartDate = startDate.Day.ToString + (startDate.Month - 1).ToString + startDate.Year.ToString
-        formatEndDate = endDate.Day.ToString + (endDate.Month - 1).ToString + startDate.Year.ToString
->>>>>>> 85be2ca63cc0c840a23ad74aecbd5f8f573a534e
+
         histPrices = queryYahoo(ticker, formatStartDate, formatEndDate, "d")
     End Sub
+
     ''' <summary>
     ''' Query for historical data from yahoo, returns csv text, dates not inclusive
     ''' </summary>
@@ -173,7 +170,7 @@ Public Class frmStartup
 
         Return output
     End Function
- 
+
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
         Dim testPen As New System.Drawing.Pen(Color.Red, 10)
