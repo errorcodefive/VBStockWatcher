@@ -36,6 +36,7 @@
         Next
         Return output
     End Function
+<<<<<<< HEAD
     Public Function getyScale(max As Double, min As Double, yScreenLength As Integer) As Integer()
         Dim diff As Double
         Dim output(3) As Integer
@@ -83,4 +84,15 @@
         output = (d.Month() - 1).ToString.PadLeft(2, "0") + d.Day.ToString + d.Year.ToString
         Return output
     End Function
+=======
+    Public Function getyScale(max As Double, yScreenLength As Integer) As Integer
+        Dim roughMax As Double
+        Dim expo As Integer
+
+        roughMax = max * 1.1
+        expo = Math.Log10(roughMax)
+
+    End Function
+
+>>>>>>> 85be2ca63cc0c840a23ad74aecbd5f8f573a534e
 End Module
