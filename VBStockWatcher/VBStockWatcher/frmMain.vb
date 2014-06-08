@@ -6,13 +6,15 @@ Imports System.Math
 
 Public Class frmStartup
     Dim histPrices As String
-    Dim formatHistPrices As String(,)
+    Dim formatHistPrices As List(Of stockData)
     Dim mainGraph As System.Drawing.Graphics
     Dim ticker As String
     Dim startdate As Date
     Dim enddate As Date
     Dim xScale As Double
-    Dim yScale As Double
+    Dim yScale(3) As Integer
+    Dim xrat As Double
+    Dim yrat As Double
 
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -43,23 +45,27 @@ Public Class frmStartup
         lblY(8) = lblY8
         lblY(9) = lblY9
 
-        'Dim test As DataTable
-        'test = formatCSV(histPrices)
-        'For Each i As DataRow In test.Rows
-        'For j As Integer = 0 To 6
-        'MsgBox(i(j))
-        'Next
-        'Next
+        Dim testPen As New System.Drawing.Pen(Color.Red, 10)
+        mainGraph = picMain.CreateGraphics
+        mainGraph.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+
     End Sub
 
     Public Sub getQuery(ticker As String, startDate As Date, endDate As Date)
         Dim formatStartDate As String
         Dim formatEndDate As String
 
+        
+
         formatStartDate = startDate.Day.ToString.PadLeft(2, "0") + (startDate.Month - 1).ToString.PadLeft(2, "0") + startDate.Year.ToString
-        formatEndDate = endDate.Day.ToString.PadLeft(2, "0") + (endDate.Month - 1).ToString.PadLeft(2, "0") + startDate.Year.ToString
+        formatEndDate = endDate.Day.ToString.PadLeft(2, "0") + (endDate.Month - 1).ToString.PadLeft(2, "0") + endDate.Year.ToString
 
         histPrices = queryYahoo(ticker, formatStartDate, formatEndDate, "d")
+        formatHistPrices = formatCSV(histPrices)
+        Dim highs As Point()
+        highs = highToPoint(formatHistPrices)
+        GraphicsModule.drawConnectedLineArray(mainGraph, highs, System.Drawing.Color.Aqua, 2)
+
     End Sub
 
     ''' <summary>
@@ -76,6 +82,7 @@ Public Class frmStartup
         Dim output As String
         output = getWholePage(generateYahooURL(stockTicker, startDate, endDate, stepLength))
 
+
         Return output
     End Function
     ''' <summary>
@@ -86,17 +93,24 @@ Public Class frmStartup
     ''' <remarks></remarks>
     Public Function getWholePage(url As String) As String
         Dim output As String
+        output = ""
         Dim request As WebRequest
         Dim response As WebResponse
 
         Dim inputStream As StreamReader
         request = HttpWebRequest.Create(url)
-        response = request.GetResponse()
+        Try
+            response = request.GetResponse()
+            inputStream = New StreamReader(response.GetResponseStream)
+            output = inputStream.ReadToEnd
+            inputStream.Close()
+            response.Close()
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
 
-        inputStream = New StreamReader(response.GetResponseStream)
-        output = inputStream.ReadToEnd
-        inputStream.Close()
-        response.Close()
+        End Try
+
+
 
         Return output
 
@@ -121,41 +135,13 @@ Public Class frmStartup
         queryURL = queryURL + queryParams
         Return queryURL
     End Function
-    Public Function formatCSV(inputCSV As String) As System.Data.DataTable
+    Public Function formatCSV(inputCSV As String) As List(Of stockData)
         'perhaps change to output as datatable/dataset instead of array
         Dim parser As New FileIO.TextFieldParser(New StringReader(inputCSV))
         Dim temp As String()
-        Dim columns As System.Data.DataColumn
+        Dim tempData As stockData
 
-        Dim output = New System.Data.DataTable("Output")
-
-        columns = New DataColumn("Date", System.Type.GetType("System.String"))
-        columns.Caption = "Date"
-        output.Columns.Add(columns)
-
-        columns = New DataColumn("Open", System.Type.GetType("System.Double"))
-        columns.Caption = "Open"
-        output.Columns.Add(columns)
-
-        columns = New DataColumn("High", System.Type.GetType("System.Double"))
-        columns.Caption = "High"
-        output.Columns.Add(columns)
-
-        columns = New DataColumn("Low", System.Type.GetType("System.Double"))
-        columns.Caption = "Low"
-        output.Columns.Add(columns)
-
-        columns = New DataColumn("Close", System.Type.GetType("System.Double"))
-        columns.Caption = "Close"
-        output.Columns.Add(columns)
-
-        columns = New DataColumn("Volume", System.Type.GetType("System.Double"))
-        columns.Caption = "Vol"
-        output.Columns.Add(columns)
-
-        columns = New DataColumn("Adjusted Closing Price", System.Type.GetType("System.Double"))
-        columns.Caption = "Adj Close"
-        output.Columns.Add(columns)
+        Dim out As New List(Of stockData)
 
         parser.TextFieldType = FileIO.FieldType.Delimited
         parser.SetDelimiters(",")
@@ -164,20 +150,58 @@ Public Class frmStartup
         parser.ReadFields()
         While parser.EndOfData = False
             temp = parser.ReadFields
-            output.Rows.Add(temp)
+            tempData.day = temp(0)
+            tempData.open = temp(1)
+            tempData.high = temp(2)
+            tempData.low = temp(3)
+            tempData.close = temp(4)
+            tempData.adjClose = temp(5)
+            out.Add(tempData)
+
         End While
 
 
-        Return output
+        Return out
     End Function
 
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
-        Dim testPen As New System.Drawing.Pen(Color.Red, 10)
-        mainGraph = picMain.CreateGraphics
-        mainGraph.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+       
 
     End Sub
+    ''' <summary>
+    ''' Only converts all highs to points
+    ''' </summary>
+    ''' <param name="formatList"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function highToPoint(formatList As List(Of stockData)) As Point()
+        Dim ymax As Double
+        Dim ymin As Double
+
+        Dim output(formatList.Count()) As Point
+        Dim count As Integer
+        Dim temp As Point
+        Dim x As Integer
+        Dim y As Integer
+
+        count = 0
+
+        xScale = MinorFunctions.getxScale(startdate, enddate)
+        xrat = Me.Height / Abs(DateDiff(DateInterval.Day, enddate, startdate))
+        ymax = MinorFunctions.findMax(formatHistPrices)
+        ymin = MinorFunctions.findMin(formatHistPrices)
+        yScale = MinorFunctions.getyScale(ymax, ymin)
+        yrat = Me.Height / Abs((yScale(2) - yScale(0)))
+        For Each i As stockData In formatList
+            y = (i.high - yScale(0)) * yrat
+            x = xrat * Abs(DateDiff(DateInterval.Day, startdate, MinorFunctions.convertToDate(i.day)))
+            temp = New Point(x, y)
+            output(count) = MinorFunctions.convertPointToNormalPoint(temp, Me.Height)
+            count = count + 1
+        Next
+        Return output
+    End Function
 
     Private Sub frmStartup_Resize(sender As Object, e As EventArgs) Handles Me.Resize
         picMain.ClientSize = New Size(Me.Width, Me.Height)
@@ -187,5 +211,13 @@ Public Class frmStartup
         enddate = frmControl.getEndDate
         startdate = frmControl.getStartDate
     End Sub
-
+    Public Structure stockData
+        Public day As Date
+        Public open As Double
+        Public high As Double
+        Public low As Double
+        Public close As Double
+        Public volume As Double
+        Public adjClose As Double
+    End Structure
 End Class
